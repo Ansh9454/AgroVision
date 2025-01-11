@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-Time Sensor Data</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(to right, #ece9e6, #ffffff);
+        }
+
+        canvas {
+            width: 80%;
+            height: 400px;
+            margin: 20px auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .recommendations {
+            margin: 20px auto;
+            font-size: 18px;
+            color: #ff0000;
+        }
+
+        /* Floating Button */
+        #floatingButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #008CBA;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+
+        #floatingButton:hover {
+            background-color: #005f7f;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            top: 0;
+            right: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+
+        .sidebar a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #f1f1f1;
+        }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Real-Time Sensor Data</h1>
+    <canvas id="sensorChart"></canvas>
+
+    <div class="recommendations" id="recommendations"></div>
+
+    <!-- Floating Button -->
+    <div id="floatingButton" onclick="openSidebar()">
+        &#9776; <!-- This is a menu icon -->
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeSidebar()">&times;</a>
+        <a href="https://agrovision-ai.vercel.app/" target="_blank">Talk to our Assistant</a>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        const sensorChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'moisture',
+                    data: [],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 3
+                }, {
+                    label: 'NPK',
+                    data: [],
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 3
+                }, {
+                    label: 'water level',
+                    data: [],
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 3
+                },
+                {
+                    label: 'Temperature',
+                    data: [],
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 3
+                },
+                {
+                    label: 'Humidity',
+                    data: [],
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function fetchData() {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    const now = new Date(data.timestamp * 1000);
+                    sensorChart.data.labels.push(now.toLocaleTimeString());
+                    sensorChart.data.datasets[0].data.push(data.moisture);
+                    sensorChart.data.datasets[1].data.push(data.npk);
+                    sensorChart.data.datasets[2].data.push(data.water_level);
+                    sensorChart.data.datasets[3].data.push(data.temperature);
+                    sensorChart.data.datasets[4].data.push(data.humidity);
+                    sensorChart.update();
+
+                    // Update recommendations
+                    const recommendationsDiv = document.getElementById('recommendations');
+                    recommendationsDiv.innerHTML = data.recommendations.join('<br>');
+                });
+        }
+
+        setInterval(fetchData, 5000);
+
+        function openSidebar() {
+            document.getElementById("sidebar").style.width = "250px";
+        }
+
+        function closeSidebar() {
+            document.getElementById("sidebar").style.width = "0";
+        }
+    </script>
+</body>
+</html>

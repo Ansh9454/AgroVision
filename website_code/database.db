@@ -1,0 +1,19 @@
+import sqlite3
+
+conn = sqlite3.connect('database.db')
+cursor = conn.cursor()
+
+# Create table
+cursor.execute('''
+CREATE TABLE sensor_data (
+    timestamp INTEGER PRIMARY KEY,
+    moisture REAL,
+    npk REAL,
+    water_level REAL
+)
+''')
+
+# Insert dummy data (replace with real sensor data fetching logic)
+cursor.execute("INSERT INTO sensor_data (timestamp, moisture, npk, water_level) VALUES (?, ?, ?, ?)", (1234567890, 23.5, 10.2, 8.0))
+conn.commit()
+conn.close()
